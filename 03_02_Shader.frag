@@ -28,6 +28,9 @@ void main(void)
 	case 5:
 		out_Color=vec4 (1.0f, 1.0f, 1.0f, 0.0f);
 		break;
+	case 6:
+	out_Color=vec4 (1.0f, 0.0f, 0.0f, 0.0f);
+	break;
 	default:
 		out_Color = ex_Color;
 		break;

@@ -26,15 +26,53 @@ matrTranslLocation,
 matrRotlLocation,
 codColLocation;
 
-int codCol;
-float PI = 3.141592, angle = 0, angle2 = 0;
-float tx = 0; float ty = 0;
-float width = 450, height = 300;
-float i = -350.0, k = 350.0, alpha = 0.0, step = 1.2, beta = 0.002, alpha2 = 0.0, step2 = 1.2;
-glm::mat4
-myMatrix, resizeMatrix, matrTransl, matrTransl2, matrTransl3, matrScale1, matrScale2, matrScale3, matrScale4, matrRot, matrDepl;
 
-void displayMatrix()
+
+/*
+
+		car1 = masina de jos care e racheta aka depaseste => Bentley Bentayga
+
+		car2 = masina de jos care urmeaza a fi depasita
+
+		car3 = masina de sus care circula normal
+
+*/
+
+
+
+/*
+
+	TO DO:
+		1. Coliziuni. 
+		2. Style. { Girofaruri la racheta, flashuri: la racheta mari si la restul mici, stopuri la toate 3}
+
+
+*/
+
+
+
+int colorCode;
+
+float PI = 3.141592, angle = 0, angle2 = 0;
+
+float tx = 0; float ty = 0;
+
+float width = 450, height = 300;
+
+float i1 = -450.0, i2 = -200.0, i3 = 100.0, k1 = 0.0;
+
+float alpha1 = 0.0, alpha2 = 0.0, alpha3 = 0.0, alpha4 = 0.0, beta = 0.05;
+
+float speed2 = 0.3, speed3 = 0.5, speed1 = 1.5;
+
+glm::mat4
+
+myMatrix, resizeMatrix, matrTransl1, matrTranslAsphalt, matrTransl3, matrTransl2, matrScaleCars, matrScale2, matrScaleAsphalt, matrScaleBackground, matrRot, matrDepl;
+
+
+
+
+void showMatrix()
 {
 	for (int ii = 0; ii < 4; ii++)
 	{
@@ -45,38 +83,103 @@ void displayMatrix()
 	cout << "\n";
 };
 
-void miscad(void)
+
+
+void movement(void)
 {
-	i = i + alpha;
-	if (i > 350.0)
-		alpha = 0.0;
-	else if (i < -350.0)
-		alpha = step;
+
+	i1 = i1 + alpha1;
+	if (i1 > 500)
+		alpha1 = 0.0;
 	angle = angle - beta;
-	k = k + alpha2;
-	if (k > 350.0)
-		alpha2 = -step2;
-	else if (k < -350.0)
+
+	if (i2 <= i1 + 80)
+	{
+		k1 = k1 + alpha4;
+		if (k1 > 100.0)
+			alpha4 = -speed1;
+		else if (k1 < 0.0)
+			alpha4 = 0.0;
+		angle = angle - beta;
+	}
+
+
+
+	i2 = i2 + alpha2;
+	if (i2 > 400.0)
 		alpha2 = 0.0;
+	else if (i2 < -350.0)
+		alpha2 = speed2;
+	angle = angle - beta;
+
+
+
+	i3 = i3 + alpha3;
+	if (i3 > 350.0)
+		alpha3 = -speed3;
+	else if (i3 < -550.0)
+		alpha3 = 0.0;
 	angle2 = angle2 + beta;
+
+
+
+
+
 	glutPostRedisplay();
+
 }
 
-void mouse(int button, int state, int x, int y)
+void overtake(void)
+{
+
+	i1 = i1 + alpha1;
+	if (i1 > 400.0)
+		alpha1 = 0.0;
+	else if (i1 < -350.0)
+		alpha1 = speed2;
+	angle = angle - beta;
+
+
+
+	glutPostRedisplay();
+
+}
+
+
+void keyPress(int button, int state, int x, int y)
 {
 	switch (button) {
+
 	case GLUT_LEFT_BUTTON:
 		if (state == GLUT_DOWN)
 		{
-			alpha = step;
-			alpha2 = -step;
+			alpha1 = speed2;
+			alpha2 = speed2;
+			alpha3 = -speed3;
 		}
-		glutIdleFunc(miscad);
+		glutIdleFunc(movement);
 		break;
+
+
+	case GLUT_RIGHT_BUTTON:
+		if (state == GLUT_DOWN)
+		{
+			speed1 = speed2*5;
+			alpha1 = speed1;
+			alpha4 = speed1;
+		}
+
+		glutIdleFunc(movement);
+
+		break;
+
+
 	default:
 		break;
 	}
 }
+
+
 
 void CreateVBO(void)
 {
@@ -124,6 +227,9 @@ void CreateVBO(void)
 	glEnableVertexAttribArray(1);
 	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, 0);
 }
+
+
+
 void DestroyVBO(void)
 {
 	glDisableVertexAttribArray(1);
@@ -135,15 +241,22 @@ void DestroyVBO(void)
 	glDeleteVertexArrays(1, &VaoId);
 }
 
+
+
 void CreateShaders(void)
 {
 	ProgramId = LoadShaders("03_02_Shader.vert", "03_02_Shader.frag");
 	glUseProgram(ProgramId);
 }
+
+
+
 void DestroyShaders(void)
 {
 	glDeleteProgram(ProgramId);
 }
+
+
 
 void Initialize(void)
 {
@@ -153,94 +266,108 @@ void Initialize(void)
 	codColLocation = glGetUniformLocation(ProgramId, "codCuloare");
 	myMatrixLocation = glGetUniformLocation(ProgramId, "myMatrix");
 }
+
+
+
 void RenderFunction(void)
 {
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	resizeMatrix = glm::ortho(-width, width, -height, height); // scalam, "aducem" scena la "patratul standard" [-1,1]x[-1,1] --- ?? nu stiu ce vrea sa insemne asta
-	matrTransl = glm::translate(glm::mat4(1.0f), glm::vec3(i, 0.0, 0.0)); // controleaza translatia de-a lungul lui Ox
-	matrTransl2 = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 60.0, 0.0)); // controleaza translatia de-a lungul lui Ox
-	matrTransl3 = glm::translate(glm::mat4(1.0f), glm::vec3(k, 120.0, 0.0)); // controleaza translatia de-a lungul lui Ox, dar invers pt masina din sens opus
-	matrScale3 = glm::scale(glm::mat4(1.0f), glm::vec3(10.1, 2.3, 0.0)); // desen asfalt
-	matrScale4 = glm::scale(glm::mat4(1.0f), glm::vec3(50.0, 50.0, 0.0)); // desen iarba
-	matrScale1 = glm::scale(glm::mat4(1.0f), glm::vec3(1.1, 0.3, 0.0)); // desen masina
+	/*
+		Declare the matrix for translations and rotations
+	*/
+
+	resizeMatrix = glm::ortho(-width, width, -height, height);							// scalam, "aducem" scena la "patratul standard" [-1,1]x[-1,1] 
+
+	matrTranslAsphalt = glm::translate(glm::mat4(1.0f), glm::vec3(0.0, 60.0, 0.0));		// asfalt + linie discontinua
+
+	matrTransl1 = glm::translate(glm::mat4(1.0f), glm::vec3(i1, k1, 0.0));				// racheta			= car1 -- controleaza translatia de-a lungul lui Ox
+	matrTransl2 = glm::translate(glm::mat4(1.0f), glm::vec3(i2, 0.0, 0.0));				// masina jos slow	= car2 -- controleaza translatia de-a lungul lui Ox
+	matrTransl3 = glm::translate(glm::mat4(1.0f), glm::vec3(i3, 120.0, 0.0));			// masina sus		= car3 -- controleaza translatia de-a lungul lui Ox, dar invers
 
 
+	matrScaleAsphalt = glm::scale(glm::mat4(1.0f), glm::vec3(10.1, 2.3, 0.0));				// utila la desenarea asfaltului
+	matrScaleBackground = glm::scale(glm::mat4(1.0f), glm::vec3(50.0, 50.0, 0.0));			// utila la desenarea background-ului
+	matrScaleCars = glm::scale(glm::mat4(1.0f), glm::vec3(0.4, 0.3, 0.0));					// utila la desenarea masinilor
 
+	/*
+		Start drawing
+	*/
 
-	// Matricea pentru ASFALT
-	myMatrix = resizeMatrix  * matrScale4;
-	// Culoarea
-	codCol = 2;
-	// Transmitere variabile uniforme
+	myMatrix = resizeMatrix * matrScaleBackground;											// Matrix for the background
+	colorCode = 2;																				// Set the color
 	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
-	glUniform1i(codColLocation, codCol);
-	// Apelare DrawArrays
-	glDrawArrays(GL_POLYGON, 4, 4);
-
-	// Matricea pentru ASFALT
-	myMatrix = resizeMatrix * matrTransl2 * matrScale3;
-	// Culoarea
-	codCol = 4;
-	// Transmitere variabile uniforme
-	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
-	glUniform1i(codColLocation, codCol);
-	// Apelare DrawArrays
+	glUniform1i(codColLocation, colorCode);
 	glDrawArrays(GL_POLYGON, 4, 4);
 
 
-	// Marcaj linie discontinua
-	myMatrix = resizeMatrix * matrTransl2;
-	// Culoarea
-	codCol = 5;
-	// Transmitere variabile uniforme
+	myMatrix = resizeMatrix * matrTranslAsphalt * matrScaleAsphalt;							// Matrix for the asphalt
+	colorCode = 4;																				// Set the color
 	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
-	glUniform1i(codColLocation, codCol);
-	// Apelare DrawArrays
-	glLineStipple(50, 0xAAAA); 
+	glUniform1i(codColLocation, colorCode);
+	glDrawArrays(GL_POLYGON, 4, 4);
+
+
+	myMatrix = resizeMatrix * matrTranslAsphalt;											// Matrix for the traffic lanes
+	colorCode = 5;																				// Set the color
+	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	glUniform1i(codColLocation, colorCode);
+	glLineStipple(50, 0xAAAA);
 	glEnable(GL_LINE_STIPPLE);
 	glDrawArrays(GL_LINES, 0, 2);
 
-	// Matricea pentru masina albastra de jos
-	myMatrix = resizeMatrix * matrTransl * matrScale1;
-	// Culoarea
-	codCol = 1;
-	// Transmitere variabile uniforme
+
+	myMatrix = resizeMatrix * matrTransl1 * matrScaleCars;									// Matrix for car1 = the rocket
+	colorCode = 6;																				// Set the color
 	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
-	glUniform1i(codColLocation, codCol);
-	// Apelare DrawArrays
+	glUniform1i(codColLocation, colorCode);
 	glDrawArrays(GL_POLYGON, 4, 4);
 
-	// Matricea pentru masina albastra de sus
-	myMatrix = resizeMatrix * matrTransl3 * matrScale1;
-	// Culoarea
-	codCol = 1;
-	// Transmitere variabile uniforme
+
+	myMatrix = resizeMatrix * matrTransl2 * matrScaleCars;									// Matrix for car2 = the lower slower one
+	colorCode = 1;																				// Set the color
 	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
-	glUniform1i(codColLocation, codCol);
-	// Apelare DrawArrays
+	glUniform1i(codColLocation, colorCode);
 	glDrawArrays(GL_POLYGON, 4, 4);
+
+	myMatrix = resizeMatrix * matrTransl3 * matrScaleCars;									// Matrix for car3 = the upper normal one
+	colorCode = 1;																				// Set the color
+	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	glUniform1i(codColLocation, colorCode);
+	glDrawArrays(GL_POLYGON, 4, 4);
+
+
 
 	glutSwapBuffers();
 	glFlush();
 }
+
+
+
 void Cleanup(void)
 {
 	DestroyShaders();
 	DestroyVBO();
 }
 
+
+
 int main(int argc, char* argv[])
 {
+
 	glutInit(&argc, argv);
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB);
+
 	glutInitWindowPosition(100, 100);
-	glutInitWindowSize(800, 600);
-	glutCreateWindow("Depasire");
+	glutInitWindowSize(1400, 600);
+	glutCreateWindow("Project1 - Zabava Claudiu & Baciu Daniel - lab4");
+
 	glewInit();
 	Initialize();
+
 	glutDisplayFunc(RenderFunction);
-	glutMouseFunc(mouse);
+	glutMouseFunc(keyPress);
+
 	glutCloseFunc(Cleanup);
 	glutMainLoop();
 }
