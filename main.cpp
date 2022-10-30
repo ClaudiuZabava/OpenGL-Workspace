@@ -67,7 +67,7 @@ float speed2 = 0.3, speed3 = 0.5, speed1 = 1.5;
 
 glm::mat4
 
-myMatrix, resizeMatrix, matrTransl1, matrTranslAsphalt, matrTransl3, matrTransl2, matrScaleCars, matrScale2, matrScaleAsphalt, matrScaleBackground, matrRot, matrDepl;
+myMatrix, resizeMatrix, matrTransl1, matrTranslAsphalt, matrTransl3, matrTransl2, matrScaleCars, matrScale2, matrScaleAsphalt, matrScaleBackground, matrRot, matrDepl , matrScaleLights, matrTransl4, matrScaleBeacon1, matrScaleBeacon2, matrRotBeacon1, matrRotBeacon2, matrTransl5, matrTransl6, matrTransl7, matrScaleStops, matrTransl8, matrTransl9, matrTransl10;
 
 
 
@@ -106,7 +106,7 @@ void movement(void)
 
 
 	i2 = i2 + alpha2;
-	if (i2 > 400.0)
+	if (i2 > 500.0)
 		alpha2 = 0.0;
 	else if (i2 < -350.0)
 		alpha2 = speed2;
@@ -121,29 +121,20 @@ void movement(void)
 		alpha3 = 0.0;
 	angle2 = angle2 + beta;
 
-
-
-
-
-	glutPostRedisplay();
-
-}
-
-void overtake(void)
-{
-
-	i1 = i1 + alpha1;
-	if (i1 > 400.0)
+	if (k1 >= 100 && ((i1+25 >= i3 - 25 && i1 <= i3) || (i3+25 >=i1-25 && i3<=i1)))
+	{
 		alpha1 = 0.0;
-	else if (i1 < -350.0)
-		alpha1 = speed2;
-	angle = angle - beta;
+		alpha3 = 0.0;
+		alpha4 = 0.0;
+
+	}
 
 
 
 	glutPostRedisplay();
 
 }
+
 
 
 void keyPress(int button, int state, int x, int y)
@@ -284,11 +275,31 @@ void RenderFunction(void)
 	matrTransl1 = glm::translate(glm::mat4(1.0f), glm::vec3(i1, k1, 0.0));				// racheta			= car1 -- controleaza translatia de-a lungul lui Ox
 	matrTransl2 = glm::translate(glm::mat4(1.0f), glm::vec3(i2, 0.0, 0.0));				// masina jos slow	= car2 -- controleaza translatia de-a lungul lui Ox
 	matrTransl3 = glm::translate(glm::mat4(1.0f), glm::vec3(i3, 120.0, 0.0));			// masina sus		= car3 -- controleaza translatia de-a lungul lui Ox, dar invers
+	matrTransl4 = glm::translate(glm::mat4(1.0f), glm::vec3(i1+45, k1, 0.0));
+
+	matrTransl5 = glm::translate(glm::mat4(1.0f), glm::vec3(i1 - 18, k1-10, 0.0));			// moving rear lights for car 1
+	matrTransl6 = glm::translate(glm::mat4(1.0f), glm::vec3(i1 - 18, k1+10, 0.0));			// moving rear lights for car 1
+
+	matrTransl7 = glm::translate(glm::mat4(1.0f), glm::vec3(i2 - 18, -10.0, 0.0));			// moving rear lights for car 2
+	matrTransl8 = glm::translate(glm::mat4(1.0f), glm::vec3(i2 - 18, 10.0, 0.0));			// moving rear lights for car 2
+
+	matrTransl9 = glm::translate(glm::mat4(1.0f), glm::vec3(i3 + 18, 110.0, 0.0));			// moving rear lights for car 3
+	matrTransl10 = glm::translate(glm::mat4(1.0f), glm::vec3(i3 + 18, 130.0, 0.0));			// moving rear lights for car 3
 
 
 	matrScaleAsphalt = glm::scale(glm::mat4(1.0f), glm::vec3(10.1, 2.3, 0.0));				// utila la desenarea asfaltului
 	matrScaleBackground = glm::scale(glm::mat4(1.0f), glm::vec3(50.0, 50.0, 0.0));			// utila la desenarea background-ului
 	matrScaleCars = glm::scale(glm::mat4(1.0f), glm::vec3(0.4, 0.3, 0.0));					// utila la desenarea masinilor
+	matrScaleLights = glm::scale(glm::mat4(1.0f), glm::vec3(0.2, 0.1, 0.0));				// utila la desenarea luminilor
+	matrScaleBeacon1 = glm::scale(glm::mat4(1.0f), glm::vec3(0.15, 0.15, 0.0));				// utila la desenarea luminilor
+	matrScaleBeacon2 = glm::scale(glm::mat4(1.0f), glm::vec3(0.1, 0.1, 0.0));				// utila la desenarea luminilor
+	matrScaleStops = glm::scale(glm::mat4(1.0f), glm::vec3(0.05, 0.05, 0.0));
+
+	matrRot = glm::rotate(glm::mat4(1.0f), 1.57f, glm::vec3(0.0, 0.0, 0.5));				// utilizat la torirea luminilor
+	matrRotBeacon1 = glm::rotate(glm::mat4(1.0f), angle, glm::vec3(0.0, 0.0, 0.5));
+	matrRotBeacon2 = glm::rotate(glm::mat4(1.0f), -angle, glm::vec3(0.0, 0.0, 0.5));
+
+	
 
 	/*
 		Start drawing
@@ -318,6 +329,31 @@ void RenderFunction(void)
 
 
 	myMatrix = resizeMatrix * matrTransl1 * matrScaleCars;									// Matrix for car1 = the rocket
+	colorCode = 7;																				// Set the color
+	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	glUniform1i(codColLocation, colorCode);
+	glDrawArrays(GL_POLYGON, 4, 4);
+
+	myMatrix = resizeMatrix * matrTransl1 * matrRotBeacon1 * matrScaleBeacon1;					// Matrix for car1 beacon1 = the rocket
+	colorCode = 1;																				// Set the color
+	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	glUniform1i(codColLocation, colorCode);
+	glDrawArrays(GL_POLYGON, 4, 4);
+
+	myMatrix = resizeMatrix * matrTransl1 * matrRotBeacon2 * matrScaleBeacon2;					// Matrix for car1 beacon2 = the rocket
+	colorCode = 6;																				// Set the color
+	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	glUniform1i(codColLocation, colorCode);
+	glDrawArrays(GL_POLYGON, 4, 4);
+
+	myMatrix = resizeMatrix * matrTransl5 * matrScaleStops;									// Matrix for car1 stop1 = the rocket
+	colorCode = 6;																				// Set the color
+	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	glUniform1i(codColLocation, colorCode);
+	glDrawArrays(GL_POLYGON, 4, 4);
+
+
+	myMatrix = resizeMatrix * matrTransl6 * matrScaleStops;									// Matrix for car1 stop2 = the rocket
 	colorCode = 6;																				// Set the color
 	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
 	glUniform1i(codColLocation, colorCode);
@@ -330,11 +366,43 @@ void RenderFunction(void)
 	glUniform1i(codColLocation, colorCode);
 	glDrawArrays(GL_POLYGON, 4, 4);
 
+	myMatrix = resizeMatrix * matrTransl7 * matrScaleStops;									// Matrix for car2 stop1 = the rocket
+	colorCode = 6;																				// Set the color
+	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	glUniform1i(codColLocation, colorCode);
+	glDrawArrays(GL_POLYGON, 4, 4);
+
+
+	myMatrix = resizeMatrix * matrTransl8 * matrScaleStops;									// Matrix for car2 stop2 = the rocket
+	colorCode = 6;																				// Set the color
+	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	glUniform1i(codColLocation, colorCode);
+	glDrawArrays(GL_POLYGON, 4, 4);
+
 	myMatrix = resizeMatrix * matrTransl3 * matrScaleCars;									// Matrix for car3 = the upper normal one
 	colorCode = 1;																				// Set the color
 	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
 	glUniform1i(codColLocation, colorCode);
 	glDrawArrays(GL_POLYGON, 4, 4);
+
+	myMatrix = resizeMatrix * matrTransl9 * matrScaleStops;									// Matrix for car3 stop1 = the rocket
+	colorCode = 6;																				// Set the color
+	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	glUniform1i(codColLocation, colorCode);
+	glDrawArrays(GL_POLYGON, 4, 4);
+
+
+	myMatrix = resizeMatrix * matrTransl10 * matrScaleStops;									// Matrix for car3 stop2 = the rocket
+	colorCode = 6;																				// Set the color
+	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	glUniform1i(codColLocation, colorCode);
+	glDrawArrays(GL_POLYGON, 4, 4);
+
+	myMatrix = resizeMatrix * matrTransl4 * matrRot *matrScaleLights ;									// Matrix for lights car1 = the rocket
+	colorCode = 3;																				// Set the color
+	glUniformMatrix4fv(myMatrixLocation, 1, GL_FALSE, &myMatrix[0][0]);
+	glUniform1i(codColLocation, colorCode);
+	glDrawArrays(GL_TRIANGLES, 3, 3);
 
 
 
